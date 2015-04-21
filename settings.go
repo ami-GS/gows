@@ -1,12 +1,16 @@
 package gows
 
+import (
+//"fmt"
+)
+
 type Opcode byte
 
 const (
 	CONTINUE Opcode = iota
 	TEXT
 	BINARY
-	CLOSE Opcode = iota + 8
+	CLOSE Opcode = iota + 5
 	PING
 	PONG
 )
@@ -14,8 +18,7 @@ const (
 type State byte
 
 const (
-	LISTENING State = iota
-	OPEN
+	OPEN State = iota + 1
 	CONNECTING
 	CLOSING
 	CLOSED
@@ -28,7 +31,7 @@ const (
 	GOING_AWAY
 	PROTOCOL_ERROR
 	UNSUPPORTED_DATA
-	NO_STATUS_RCVD CloseCode = iota + 1005
+	NO_STATUS_RCVD CloseCode = iota + 1001
 	ABNORMAL_CLOSURE
 	INVALID_FRAME_PAYLOAD_DATA
 	POLICY_VIOLATION
