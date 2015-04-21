@@ -15,6 +15,19 @@ const (
 	PONG
 )
 
+func (opc Opcode) String() string {
+	opcodes := []string{
+		"CONTINUE",
+		"TEXT",
+		"BINARY",
+		"", "", "", "", "", //RESERVED
+		"CLOSE",
+		"PING",
+		"PONG",
+	}
+	return opcodes[int(opc)]
+}
+
 type State byte
 
 const (
@@ -23,6 +36,17 @@ const (
 	CLOSING
 	CLOSED
 )
+
+func (st State) String() string {
+	states := []string{
+		"OPEN",
+		"CONNECTING",
+		"CLOSING",
+		"CLOSED",
+	}
+	return states[int(st)-1]
+
+}
 
 type CloseCode uint16
 
@@ -40,6 +64,25 @@ const (
 	INTERNAL_SERVER_ERROR
 	TLS_HANDSHAKE
 )
+
+func (c CloseCode) String() string {
+	closeCodes := []string{
+		"NORMAL_CLOSURE",
+		"GOING_AWAY",
+		"PROTOCOL_ERROR",
+		"UNSUPPORTED_DATA",
+		"", // RESERVED
+		"NO_STATUS_RCVD",
+		"ABNORMAL_CLOSURE",
+		"INVALID_FRAME_PAYLOAD_DATA",
+		"POLICY_VIOLATION",
+		"MESSAGE_TOO_BIG",
+		"MANDATORY_EXT",
+		"INTERNAL_SERVER_ERROR",
+		"TLS_HANDSHAKE",
+	}
+	return closeCodes[int(c)-1000]
+}
 
 var HandshakeRequest []byte = []byte(`GET /chat HTTP/1.1
 Host: server.example.com
