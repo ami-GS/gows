@@ -1,9 +1,13 @@
 package gows
 
+import (
+//"fmt"
+)
+
 type Frame struct {
 	FIN      byte
 	RSV      [3]byte
-	Opcode   byte
+	opc      Opcode
 	Mask     byte
 	Length   uint64
 	Mask_key uint32
@@ -11,21 +15,20 @@ type Frame struct {
 }
 
 func NewFrame() (frame *Frame) {
-
+	frame = &Frame{0, [3]byte{0, 0, 0}, CONTINUE, 0, 0, 0, []byte{}}
 	return
 }
 
-func Pack(data []byte) (buf []byte) {
+func Pack(data []byte, opc Opcode) (buf []byte) {
 	buf = make([]byte, 2)
-	fin := 0
+	fin := 1
 	rsv := []byte{0, 0, 0}
-	opcode := TEXT
 	buf[0] = byte(fin << 7)
 	for i, v := range rsv {
 		buf[0] |= byte(v << byte(6-i))
 	}
-	buf[0] |= byte(opcode)
-	var mask byte = 1 // check if sender is server or client
+	buf[0] |= byte(opc)
+	var mask byte = 0 // check if sender is server or client
 	buf[1] = mask << 7
 	datalen := len(data)
 
@@ -63,36 +66,35 @@ func Pack(data []byte) (buf []byte) {
 	return
 }
 
-func Parse(buf []byte) (frame *Frame) {
+func Parse(conn *Connection) (frame *Frame, err error) {
+	frame = NewFrame()
+	buf, err := conn.Read(2)
 	frame.FIN = buf[0] & 0x80
 	frame.RSV[0], frame.RSV[1], frame.RSV[2] = buf[0]&0x40, buf[0]&0x20, buf[0]&0x10
-	frame.Opcode = buf[0] & 0x0f
+	frame.opc = Opcode(buf[0] & 0x0f)
 	frame.Mask = buf[1] & 0x80
 	frame.Length = uint64(buf[1] & 0x7f)
-	idx := 2
+	var ext []byte
 	if frame.Length == 126 {
-		frame.Length = uint64(byte(buf[2]<<8) | buf[3])
-		idx += 2
+		ext, err = conn.Read(2)
+		frame.Length = uint64(byte(ext[0]<<8) | ext[1])
 	} else if frame.Length == 127 {
-		frame.Length = uint64(byte(buf[2]<<56) | byte(buf[3]<<48) |
-			byte(buf[4]<<40) | byte(buf[5]<<32) | byte(buf[6]<<24) |
-			byte(buf[7]<<16) | byte(buf[8]<<8) | buf[9])
-		idx += 8
+		ext, err = conn.Read(8)
+		frame.Length = uint64(byte(ext[0]<<56) | byte(ext[1]<<48) |
+			byte(ext[2]<<40) | byte(ext[3]<<32) | byte(ext[4]<<24) |
+			byte(ext[5]<<16) | byte(ext[6]<<8) | ext[7])
 	}
+	var mask []byte
 	if frame.Mask == 1 {
-		frame.Mask_key = uint32(byte(buf[idx]<<24) | byte(buf[idx]<<16) |
-			byte(buf[idx]<<8) | buf[idx])
-		idx += 4
+		mask, err = conn.Read(4)
+		frame.Mask_key = uint32(byte(mask[0]<<24) | byte(mask[1]<<16) |
+			byte(mask[2]<<8) | mask[3])
 	}
-	frame.Payload = make([]byte, frame.Length/8)
-	for i := 0; uint64(i) < frame.Length/8; i++ {
-		frame.Payload[i] = buf[idx+i]
-	}
+	frame.Payload, err = conn.Read(uint32(frame.Length))
 	if frame.Mask == 1 {
 		for i, v := range frame.Payload {
 			frame.Payload[i] = v ^ byte(frame.Mask_key>>byte(3-(i%4)*8))
 		}
 	}
-
 	return
 }
