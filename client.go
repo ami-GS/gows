@@ -25,8 +25,7 @@ func (self *Client) Connect(addr string) {
 		}
 	}
 	conn, _ := net.Dial("tcp", addr)
-	connection := NewConnection(addr)
-	connection.conn = &conn
+	connection := NewConnection(&conn, addr)
 	connection.ValidateHandshake()
 	self.connections = append(self.connections, *connection)
 	go connection.ReceiveLoop()

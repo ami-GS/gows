@@ -12,8 +12,8 @@ type Connection struct {
 	addr     string
 }
 
-func NewConnection(addr string) (conn *Connection) {
-	conn = &Connection{OPEN, nil, false, addr}
+func NewConnection(conn *net.Conn, addr string) (connection *Connection) {
+	connection = &Connection{OPEN, conn, false, addr}
 	return
 
 }

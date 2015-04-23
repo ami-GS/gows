@@ -6,28 +6,32 @@ import (
 )
 
 type Server struct {
-	clients []Connection
+	clients map[string]*Connection
+	serv    *net.Listener
 	addr    string
 }
 
 func NewServer(addr string) *Server {
-	server := &Server{[]Connection{}, addr}
+	serv, err := net.Listen("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	server := &Server{
+		map[string]*Connection{"": &Connection{}},
+		&serv, addr}
+
 	return server
 }
 
 func (self *Server) WaitClient() {
-	serv, err := net.Listen("tcp", self.addr)
-	if err != nil {
-		panic(err)
-	}
 	for {
-		conn, err := serv.Accept()
+		conn, err := (*self.serv).Accept()
 		if err != nil {
 			panic(err)
 		}
 
-		connection := Connection{OPEN, &conn, false, conn.LocalAddr().String()}
-		self.clients = append(self.clients, connection)
+		connection := NewConnection(&conn, conn.LocalAddr().String())
+		self.clients[conn.LocalAddr().String()] = connection
 		buffer, err := connection.Read(1024)
 		if err != nil {
 			//
