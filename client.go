@@ -14,8 +14,16 @@ func NewClient() *Client {
 	return client
 }
 
-func (self *Client) Send(data []byte, opc Opcode) {
-	self.connections[0].Send(data, opc)
+func (self *Client) Send(data []byte, isBin bool) {
+	if isBin {
+		self.connections[0].Send(data, BINARY)
+	} else {
+		self.connections[0].Send(data, TEXT)
+	}
+}
+
+func (self *Client) Ping(data []byte) {
+	self.connections[0].Send(data, PING)
 }
 
 func (self *Client) Connect(addr string) {
