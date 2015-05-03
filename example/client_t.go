@@ -9,7 +9,7 @@ import (
 func main() {
 	client := gows.NewClient()
 	client.Connect("127.0.0.1:8080")
-	data := []byte("aiueo")
+	data := "aiueo"
 	client.Ping(data)
 	time.Sleep(time.Second)
 	client.Ping(data)

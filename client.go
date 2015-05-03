@@ -14,16 +14,16 @@ func NewClient() *Client {
 	return client
 }
 
-func (self *Client) Send(data []byte, isBin bool) {
+func (self *Client) Send(data string, isBin bool) {
 	if isBin {
-		self.connections[0].Send(data, BINARY)
+		self.connections[0].Send([]byte(data), BINARY)
 	} else {
-		self.connections[0].Send(data, TEXT)
+		self.connections[0].Send([]byte(data), TEXT)
 	}
 }
 
-func (self *Client) Ping(data []byte) {
-	self.connections[0].Send(data, PING)
+func (self *Client) Ping(data string) {
+	self.connections[0].Send([]byte(data), PING)
 }
 
 func (self *Client) Connect(addr string) {
