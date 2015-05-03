@@ -10,12 +10,12 @@ type Frame struct {
 	opc      Opcode
 	Mask     byte
 	Length   uint64
-	Mask_key uint32
+	Mask_key [4]byte
 	Payload  []byte
 }
 
 func NewFrame() (frame *Frame) {
-	frame = &Frame{0, [3]byte{0, 0, 0}, CONTINUE, 0, 0, 0, []byte{}}
+	frame = &Frame{0, [3]byte{0, 0, 0}, CONTINUE, 0, 0, [4]byte{0, 0, 0, 0}, []byte{}}
 	return
 }
 
@@ -60,6 +60,9 @@ func Pack(data []byte, opc Opcode) (buf []byte) {
 			buf[idx+i] = 0xff // mask_key here
 		}
 		idx += 4
+		for i, v := range data {
+			data[i] = v ^ 0xff
+		}
 	}
 
 	buf = append(buf, data...)
@@ -69,10 +72,10 @@ func Pack(data []byte, opc Opcode) (buf []byte) {
 func Parse(conn *Connection) (frame *Frame, err error) {
 	frame = NewFrame()
 	buf, err := conn.Read(2)
-	frame.FIN = buf[0] & 0x80
+	frame.FIN = (buf[0] & 0x80) >> 7
 	frame.RSV[0], frame.RSV[1], frame.RSV[2] = buf[0]&0x40, buf[0]&0x20, buf[0]&0x10
 	frame.opc = Opcode(buf[0] & 0x0f)
-	frame.Mask = buf[1] & 0x80
+	frame.Mask = (buf[1] & 0x80) >> 7
 	frame.Length = uint64(buf[1] & 0x7f)
 	var ext []byte
 	if frame.Length == 126 {
@@ -84,16 +87,16 @@ func Parse(conn *Connection) (frame *Frame, err error) {
 			byte(ext[2]<<40) | byte(ext[3]<<32) | byte(ext[4]<<24) |
 			byte(ext[5]<<16) | byte(ext[6]<<8) | ext[7])
 	}
-	var mask []byte
 	if frame.Mask == 1 {
-		mask, err = conn.Read(4)
-		frame.Mask_key = uint32(byte(mask[0]<<24) | byte(mask[1]<<16) |
-			byte(mask[2]<<8) | mask[3])
+		mask, _ := conn.Read(4)
+		for i, v := range mask {
+			frame.Mask_key[i] = v
+		}
 	}
 	frame.Payload, err = conn.Read(uint32(frame.Length))
 	if frame.Mask == 1 {
 		for i, v := range frame.Payload {
-			frame.Payload[i] = v ^ byte(frame.Mask_key>>byte(3-(i%4)*8))
+			frame.Payload[i] = v ^ frame.Mask_key[(3-i%4)]
 		}
 	}
 	return
