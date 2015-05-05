@@ -91,9 +91,11 @@ Connection: Upgrade
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
 Origin: http://example.com
 Sec-WebSocket-Protocol: chat, superchat
-Sec-WebScoket-Version: 13`)
+Sec-WebScoket-Version: 13
+`)
 
 var HandshakeResponse []byte = []byte(`HTTP/1.1 101 Switching Protocols
 Upgrade: websocket
 Connection: Upgrade
-Sec-Websocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=`)
+Sec-Websocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+`)
