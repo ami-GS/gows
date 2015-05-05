@@ -3,6 +3,7 @@ package gows
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 type Connection struct {
@@ -18,12 +19,28 @@ func NewConnection(conn *net.Conn, addr string) (connection *Connection) {
 
 }
 
-func (self *Connection) ValidateHandshake() {
+func (self *Connection) ValidateHandshake() (validate bool) {
 	self.openingHandshake()
+	validate = true
 	for {
-		buffer, _ := self.Read(1024)
-		fmt.Printf("%s\n", buffer)
-		break
+		buffer, _ := self.Read(256)
+		af := strings.Split(string(buffer), "\n")
+		for _, v := range af {
+			if strings.Contains(v, "HTTP/1.1") {
+				continue
+			}
+
+			header := strings.Split(v, ": ")
+			fmt.Printf("%v ", header)
+			if header[0] == "Upgrade" && header[1] != "websocket" {
+				validate = false
+			} else if header[0] == "Connection" && header[1] != "Upgrade" {
+				validate = false
+			} else if header[0] == "Sec-Websocket-Accept" && header[1] != "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=" {
+				validate = false
+			}
+		}
+		return
 		// validate handshake response from peer
 		// finally break
 	}
