@@ -3,6 +3,7 @@ package gows
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 )
 
@@ -10,9 +11,14 @@ type Client struct {
 	connections []Connection
 }
 
-func NewClient() *Client {
+func NewClient(reqUrl string) (*Client, error) {
+	u, _ := url.Parse(reqUrl)
 	client := &Client{[]Connection{}}
-	return client
+	err := client.Connect(u.Host)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func (self *Client) Send(data string, isBin bool) {
@@ -49,20 +55,21 @@ func (self *Client) ValidateResponse(buffer []byte) (validate bool) {
 	return
 }
 
-func (self *Client) Connect(addr string) {
+func (self *Client) Connect(addr string) (err error) {
 	for _, con := range self.connections {
 		if addr == con.addr {
 			// refuse connect
 		}
 	}
-	conn, _ := net.Dial("tcp", addr)
+	conn, err := net.Dial("tcp", addr)
 	connection := NewConnection(&conn, addr)
 	connection.SendHandshake()
-	buffer, _ := connection.Read(256)
+	buffer, err := connection.Read(256)
 	if !self.ValidateResponse(buffer) {
 		connection.Close()
 	} else {
 		self.connections = append(self.connections, *connection)
 		go connection.ReceiveLoop()
 	}
+	return
 }
