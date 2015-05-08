@@ -6,14 +6,17 @@ import (
 )
 
 type Connection struct {
-	state    State
-	conn     *net.Conn
-	WaitPong bool
-	addr     string
+	state     State
+	conn      *net.Conn
+	WaitPong  bool
+	addr      string
+	IsBrowser bool
+	SubProto  string
+	Extention string
 }
 
 func NewConnection(conn *net.Conn, addr string) (connection *Connection) {
-	connection = &Connection{OPEN, conn, false, addr}
+	connection = &Connection{OPEN, conn, false, addr, false, "", ""}
 	return
 
 }
@@ -38,6 +41,7 @@ func (self *Connection) Send(data []byte, opc Opcode) {
 	} else if opc == PING {
 		self.WaitPong = true
 	}
+	fmt.Printf("Send\n\tOpcode=%s, Data=%s\n", opc.String(), data)
 	(*self.conn).Write(Pack(data, opc))
 }
 
@@ -56,13 +60,12 @@ func (self *Connection) ReceiveLoop() {
 		if err != nil {
 			break
 		}
-		fmt.Printf("Opcode=%s, %s\n", frame.opc.String(), frame.Payload)
+		fmt.Printf("Recv\n\tOpcode=%s, Data=%s\n", frame.opc.String(), frame.Payload)
 		if frame.opc == CLOSE {
 			self.state = CLOSING
 			self.Send([]byte(""), CLOSE)
 			break
 		} else if frame.opc == PING {
-			fmt.Printf("%s\n", frame.Payload)
 			self.Send(frame.Payload, PONG)
 		} else if frame.opc == PONG {
 			self.WaitPong = false

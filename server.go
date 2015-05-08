@@ -26,7 +26,7 @@ func NewServer(addr string) *Server {
 }
 
 // TODO: gather validate function to 1 (client and server)
-func (self *Server) ValidateRequest(buffer []byte) (validate bool) {
+func (self *Server) ValidateRequest(buffer []byte, addr string) (validate bool) {
 	af := strings.Split(string(buffer), "\n")
 	validate = true
 	for _, v := range af {
@@ -35,16 +35,22 @@ func (self *Server) ValidateRequest(buffer []byte) (validate bool) {
 		}
 		header := strings.Split(v, ": ")
 		fmt.Printf("%v ", header)
-		if header[0] == "Upgrade" && header[1] != "websocket" {
+		if header[0] == "Host" {
+			validate = true // authority ?
+		} else if header[0] == "Upgrade" && header[1] != "websocket" {
 			validate = false
 		} else if header[0] == "Connection" && header[1] != "Upgrade" {
 			validate = false
 		} else if header[0] == "Sec-Websocket-Key" && header[1] != "dGhlIHNhbXBsZSBub25jZQ==" {
 			validate = false
-		} else if header[0] == "Sec-WebSocket-Protocol" && !strings.Contains(header[1], "chat") {
-			validate = false
 		} else if header[0] == "Sec-WebScoket-Version" && !strings.Contains(header[1], self.version) {
 			validate = false
+		} else if header[0] == "Origin" {
+			self.clients[addr].IsBrowser = true
+		} else if header[0] == "Sec-WebSocket-Protocol" {
+			self.clients[addr].SubProto = header[1]
+		} else if header[0] == "Sec-WebSocket-Extensions" {
+			self.clients[addr].Extention = header[1]
 		}
 
 	}
@@ -59,9 +65,10 @@ func (self *Server) WaitClient() {
 		}
 
 		connection := NewConnection(&conn, conn.LocalAddr().String())
-		self.clients[conn.LocalAddr().String()] = connection
+		addr := conn.LocalAddr().String()
+		self.clients[addr] = connection
 		buffer, _ := connection.Read(1024)
-		if !self.ValidateRequest(buffer) {
+		if !self.ValidateRequest(buffer, addr) {
 			connection.Close()
 		} else {
 			connection.ResponseOpeningHandshake()
