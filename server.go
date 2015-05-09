@@ -20,7 +20,7 @@ func NewServer(addr string) *Server {
 	}
 	server := &Server{
 		map[string]*Connection{"": &Connection{}},
-		&serv, addr, "13"}
+		&serv, addr, VERSION}
 
 	return server
 }

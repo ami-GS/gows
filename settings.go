@@ -4,6 +4,8 @@ import (
 //"fmt"
 )
 
+var VERSION string = "13"
+
 type Opcode byte
 
 const (
