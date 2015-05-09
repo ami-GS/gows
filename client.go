@@ -62,7 +62,7 @@ func (self *Client) Connect(addr string) (err error) {
 		}
 	}
 	conn, err := net.Dial("tcp", addr)
-	connection := NewConnection(&conn, addr)
+	connection := NewConnection(&conn, addr, true)
 	connection.SendHandshake()
 	buffer, err := connection.Read(256)
 	if !self.ValidateResponse(buffer) {

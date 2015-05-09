@@ -19,7 +19,7 @@ func NewFrame() (frame *Frame) {
 	return
 }
 
-func Pack(data []byte, opc Opcode) (buf []byte) {
+func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 	buf = make([]byte, 2)
 	fin := 1
 	rsv := []byte{0, 0, 0}
@@ -28,8 +28,9 @@ func Pack(data []byte, opc Opcode) (buf []byte) {
 		buf[0] |= byte(v << byte(6-i))
 	}
 	buf[0] |= byte(opc)
-	var mask byte = 0 // check if sender is server or client
-	buf[1] = mask << 7
+	if isClient {
+		buf[1] |= 0x80
+	}
 	datalen := len(data)
 
 	var idx int
@@ -54,7 +55,7 @@ func Pack(data []byte, opc Opcode) (buf []byte) {
 		idx = 2
 	}
 
-	if mask == 1 {
+	if isClient {
 		buf = append(buf, 0, 0, 0, 0)
 		for i := 0; i < 4; i++ {
 			buf[idx+i] = 0xff // mask_key here

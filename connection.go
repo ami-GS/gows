@@ -8,6 +8,7 @@ import (
 type Connection struct {
 	state     State
 	conn      *net.Conn
+	IsClient  bool
 	WaitPong  bool
 	addr      string
 	IsBrowser bool
@@ -15,8 +16,8 @@ type Connection struct {
 	Extention string
 }
 
-func NewConnection(conn *net.Conn, addr string) (connection *Connection) {
-	connection = &Connection{OPEN, conn, false, addr, false, "", ""}
+func NewConnection(conn *net.Conn, addr string, isClient bool) (connection *Connection) {
+	connection = &Connection{OPEN, conn, isClient, false, addr, false, "", ""}
 	return
 
 }
@@ -42,7 +43,7 @@ func (self *Connection) Send(data []byte, opc Opcode) {
 		self.WaitPong = true
 	}
 	fmt.Printf("Send\n\tOpcode=%s, Data=%s\n", opc.String(), data)
-	(*self.conn).Write(Pack(data, opc))
+	(*self.conn).Write(Pack(data, opc, self.IsClient))
 }
 
 func (self *Connection) Read(length uint32) (buffer []byte, err error) {

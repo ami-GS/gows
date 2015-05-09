@@ -64,7 +64,7 @@ func (self *Server) WaitClient() {
 			panic(err)
 		}
 
-		connection := NewConnection(&conn, conn.LocalAddr().String())
+		connection := NewConnection(&conn, conn.LocalAddr().String(), false)
 		addr := conn.LocalAddr().String()
 		self.clients[addr] = connection
 		buffer, _ := connection.Read(1024)
