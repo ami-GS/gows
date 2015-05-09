@@ -29,10 +29,11 @@ func NewServer(addr string) *Server {
 func (self *Server) ValidateRequest(buffer []byte, addr string) (validate bool) {
 	af := strings.Split(string(buffer), "\n")
 	validate = true
-	for _, v := range af {
-		if strings.Contains(v, "HTTP/1.1") {
+	for i, v := range af {
+		if i == 1 {
 			continue
 		}
+
 		header := strings.Split(v, ": ")
 		fmt.Printf("%v ", header)
 		if header[0] == "Host" {

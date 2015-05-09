@@ -37,8 +37,8 @@ func (self *Client) Ping(data string) {
 func (self *Client) ValidateResponse(buffer []byte) (validate bool) {
 	af := strings.Split(string(buffer), "\n")
 	validate = true
-	for _, v := range af {
-		if strings.Contains(v, "HTTP/1.1") {
+	for i, v := range af {
+		if i == 1 {
 			continue
 		}
 
