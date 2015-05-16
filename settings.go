@@ -86,18 +86,18 @@ func (c CloseCode) String() string {
 	return closeCodes[int(c)-1000]
 }
 
-var HandshakeRequest []byte = []byte(`GET /chat HTTP/1.1
-Host: server.example.com
+var HandshakeRequest string = `GET /chat HTTP/1.1
+Host: %s
 Upgrade: websocket
 Connection: Upgrade
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-Origin: http://example.com
+Origin: %d
 Sec-WebSocket-Protocol: chat, superchat
 Sec-WebScoket-Version: 13
-`)
+`
 
-var HandshakeResponse []byte = []byte(`HTTP/1.1 101 Switching Protocols
+var HandshakeResponse string = `HTTP/1.1 101 Switching Protocols
 Upgrade: websocket
 Connection: Upgrade
 Sec-Websocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-`)
+`

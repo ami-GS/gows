@@ -41,12 +41,12 @@ func NewConnection(conn *net.Conn, addr string, isClient bool) (connection *Conn
 }
 
 func (self *Connection) SendHandshake() {
-	(*self.conn).Write(HandshakeRequest)
+	(*self.conn).Write([]byte(fmt.Sprintf(HandshakeRequest, self.addr.host, self.addr.port)))
 	self.state = CONNECTING
 }
 
 func (self *Connection) ResponseOpeningHandshake() {
-	(*self.conn).Write(HandshakeResponse)
+	(*self.conn).Write([]byte(HandshakeResponse))
 }
 
 func (self *Connection) Close() {
