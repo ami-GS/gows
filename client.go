@@ -57,7 +57,7 @@ func (self *Client) ValidateResponse(buffer []byte) (validate bool) {
 
 func (self *Client) Connect(addr string) (err error) {
 	for _, con := range self.connections {
-		if addr == con.addr {
+		if addr == con.addr.String() {
 			// refuse connect
 		}
 	}

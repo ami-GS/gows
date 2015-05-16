@@ -3,21 +3,39 @@ package gows
 import (
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 )
+
+type Addr struct {
+	host string
+	port uint16
+}
+
+func (self Addr) String() string {
+	return self.host + ":" + strconv.Itoa(int(self.port))
+}
 
 type Connection struct {
 	state     State
 	conn      *net.Conn
 	IsClient  bool
 	WaitPong  bool
-	addr      string
+	addr      *Addr
 	IsBrowser bool
 	SubProto  string
 	Extention string
 }
 
 func NewConnection(conn *net.Conn, addr string, isClient bool) (connection *Connection) {
-	connection = &Connection{OPEN, conn, isClient, false, addr, false, "", ""}
+	ad := strings.Split(addr, ":")
+	if len(ad) == 1 {
+		ad = append(ad, "80")
+	}
+	port, _ := strconv.ParseUint(ad[1], 10, 16)
+	connection = &Connection{OPEN, conn, isClient, false,
+		&Addr{ad[0], uint16(port)},
+		false, "", ""}
 	return
 
 }

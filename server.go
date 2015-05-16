@@ -3,24 +3,31 @@ package gows
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
 type Server struct {
 	clients map[string]*Connection
 	serv    *net.Listener
-	addr    string
+	addr    *Addr // binding addr
 	version string
 }
 
 func NewServer(addr string) *Server {
+	if !strings.Contains(addr, ":") {
+		addr += ":80"
+	}
+	ad := strings.Split(addr, ":")
 	serv, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
+	port, _ := strconv.ParseUint(ad[1], 10, 16)
 	server := &Server{
 		map[string]*Connection{"": &Connection{}},
-		&serv, addr, VERSION}
+		&serv, &Addr{ad[0], uint16(port)},
+		VERSION}
 
 	return server
 }
