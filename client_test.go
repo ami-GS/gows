@@ -7,9 +7,11 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	reqUrl := "ws://example.com:8080"
+	server := NewServer("127.0.0.1:8080")
+	go server.WaitClient()
+	reqUrl := "ws://127.0.0.1:8080"
+	actual, _ := NewClient(reqUrl)
 	u, _ := url.Parse(reqUrl)
-	actual, _ := NewClient(u.Host)
 	expect := &Client{[]Connection{}}
 	_ = expect.Connect(u.Host)
 	if !reflect.DeepEqual(actual.connections, expect.connections) {
