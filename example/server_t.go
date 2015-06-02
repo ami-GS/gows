@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../../gows"
+	"github.com/ami-GS/gows"
 )
 
 func main() {
