@@ -1,7 +1,7 @@
 package gows
 
 import (
-//"fmt"
+	"math/rand"
 )
 
 type Frame struct {
@@ -56,14 +56,13 @@ func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 	}
 
 	if isClient {
-		buf = append(buf, 0, 0, 0, 0)
-		for i := 0; i < 4; i++ {
-			buf[idx+i] = 0xff // mask_key here
+		key := rand.Uint32()
+		mask_key := []byte{byte(key >> 24), byte(key >> 16), byte(key >> 8), byte(key)}
+		buf = append(buf, mask_key...)
+		for i, v := range data {
+			data[i] = v ^ mask_key[i%4]
 		}
 		idx += 4
-		for i, v := range data {
-			data[i] = v ^ 0xff
-		}
 	}
 
 	buf = append(buf, data...)
@@ -90,14 +89,12 @@ func Parse(conn *Connection) (frame *Frame, err error) {
 	}
 	if frame.Mask == 1 {
 		mask, _ := conn.Read(4)
-		for i, v := range mask {
-			frame.Mask_key[i] = v
-		}
+		frame.Mask_key = [4]byte{mask[0], mask[1], mask[2], mask[3]}
 	}
 	frame.Payload, err = conn.Read(uint32(frame.Length))
 	if frame.Mask == 1 {
 		for i, v := range frame.Payload {
-			frame.Payload[i] = v ^ frame.Mask_key[(3-i%4)]
+			frame.Payload[i] = v ^ frame.Mask_key[i%4]
 		}
 	}
 	return
