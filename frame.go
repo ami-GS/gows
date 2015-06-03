@@ -33,7 +33,6 @@ func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 	}
 	datalen := len(data)
 
-	var idx int
 	if datalen >= 126 {
 		if datalen <= 0xffff {
 			buf[1] |= 126
@@ -41,18 +40,15 @@ func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 			for i := 0; i < 2; i++ {
 				buf[2+i] = byte(datalen>>byte(1-i)*8) & 0xff
 			}
-			idx = 3
 		} else {
 			buf[1] |= 126
 			buf = append(buf, 0, 0, 0, 0, 0, 0, 0, 0)
 			for i := 0; i < 8; i++ {
 				buf[2+i] = byte(datalen>>byte(7-i)*8) & 0xff
 			}
-			idx = 9
 		}
 	} else {
 		buf[1] |= byte(datalen)
-		idx = 2
 	}
 
 	if isClient {
@@ -62,7 +58,6 @@ func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 		for i, v := range data {
 			data[i] = v ^ mask_key[i%4]
 		}
-		idx += 4
 	}
 
 	buf = append(buf, data...)
