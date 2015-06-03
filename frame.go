@@ -6,7 +6,7 @@ import (
 
 type Frame struct {
 	FIN      byte
-	RSV      [3]byte
+	RSV      byte
 	opc      Opcode
 	Mask     byte
 	Length   uint64
@@ -15,18 +15,16 @@ type Frame struct {
 }
 
 func NewFrame() (frame *Frame) {
-	frame = &Frame{0, [3]byte{0, 0, 0}, CONTINUE, 0, 0, [4]byte{0, 0, 0, 0}, []byte{}}
+	frame = &Frame{0, 0, CONTINUE, 0, 0, [4]byte{0, 0, 0, 0}, []byte{}}
 	return
 }
 
 func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
 	buf = make([]byte, 2)
-	fin := 1
-	rsv := []byte{0, 0, 0}
+	fin := 1         // TODO: should be set
+	var rsv byte = 2 //
 	buf[0] = byte(fin << 7)
-	for i, v := range rsv {
-		buf[0] |= byte(v << byte(6-i))
-	}
+	buf[0] |= rsv << 4
 	buf[0] |= byte(opc)
 	if isClient {
 		buf[1] |= 0x80
@@ -68,7 +66,7 @@ func Parse(conn *Connection) (frame *Frame, err error) {
 	frame = NewFrame()
 	buf, err := conn.Read(2)
 	frame.FIN = (buf[0] & 0x80) >> 7
-	frame.RSV[0], frame.RSV[1], frame.RSV[2] = buf[0]&0x40, buf[0]&0x20, buf[0]&0x10
+	frame.RSV = (buf[0] >> 4) & 3
 	frame.opc = Opcode(buf[0] & 0x0f)
 	frame.Mask = (buf[1] & 0x80) >> 7
 	frame.Length = uint64(buf[1] & 0x7f)
