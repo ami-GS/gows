@@ -85,12 +85,12 @@ func Parse(conn *Connection) (frame *Frame, err error) {
 	if frame.Mask == 1 {
 		mask, _ := conn.Read(4)
 		frame.Mask_key = [4]byte{mask[0], mask[1], mask[2], mask[3]}
-	}
-	frame.Payload, err = conn.Read(uint32(frame.Length))
-	if frame.Mask == 1 {
+		frame.Payload, err = conn.Read(uint32(frame.Length))
 		for i, v := range frame.Payload {
 			frame.Payload[i] = v ^ frame.Mask_key[i%4]
 		}
+		return
 	}
+	frame.Payload, err = conn.Read(uint32(frame.Length))
 	return
 }
