@@ -19,12 +19,14 @@ func NewFrame() (frame *Frame) {
 	return
 }
 
-func Pack(data []byte, opc Opcode, isClient bool) (buf []byte) {
+func Pack(data []byte, opc Opcode, rsv byte, fin, isClient bool) (buf []byte) {
 	buf = make([]byte, 2)
-	fin := 1         // TODO: should be set
-	var rsv byte = 2 //
-	buf[0] = byte(fin << 7)
-	buf[0] |= rsv << 4
+	if fin {
+		buf[0] = 0x80
+	}
+	if 0 < rsv && rsv <= 3 {
+		buf[0] |= rsv << 4
+	}
 	buf[0] |= byte(opc)
 	if isClient {
 		buf[1] |= 0x80

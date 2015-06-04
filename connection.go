@@ -23,6 +23,7 @@ type Connection struct {
 	WaitPong  bool
 	addr      *Addr
 	IsBrowser bool
+	RSV       byte
 	SubProto  string
 	Extention string
 }
@@ -35,9 +36,12 @@ func NewConnection(conn *net.Conn, addr string, isClient bool) (connection *Conn
 	port, _ := strconv.ParseUint(ad[1], 10, 16)
 	connection = &Connection{OPEN, conn, isClient, false,
 		&Addr{ad[0], uint16(port)},
-		false, "", ""}
+		false, 0, "", ""}
 	return
+}
 
+func (self *Connection) SetRSV(rsv byte) {
+	self.RSV = rsv
 }
 
 func (self *Connection) SendHandshake() {
@@ -61,7 +65,7 @@ func (self *Connection) Send(data []byte, opc Opcode) {
 		self.WaitPong = true
 	}
 	fmt.Printf("Send\n\tOpcode=%s, Data=%s\n", opc.String(), data)
-	(*self.conn).Write(Pack(data, opc, self.IsClient))
+	(*self.conn).Write(Pack(data, opc, self.RSV, true, self.IsClient))
 }
 
 func (self *Connection) Read(length uint32) (buffer []byte, err error) {

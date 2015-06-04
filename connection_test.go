@@ -14,7 +14,7 @@ func TestNewConnection(t *testing.T) {
 	conn, _ := net.Dial("tcp", addr)
 	actual := NewConnection(&conn, addr, true)
 	expect := &Connection{OPEN, &conn, true, false,
-		&Addr{host, uint16(portInt)}, false, "", ""}
+		&Addr{host, uint16(portInt)}, false, 0, "", ""}
 	if actual.state != expect.state {
 		t.Errorf("got %v\nwant %v", actual.state, expect.state)
 	}
@@ -31,6 +31,9 @@ func TestNewConnection(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual.addr, expect.addr)
 	}
 	if actual.IsBrowser != expect.IsBrowser {
+		t.Errorf("got %v\nwant %v", actual.IsBrowser, expect.IsBrowser)
+	}
+	if actual.RSV != expect.RSV {
 		t.Errorf("got %v\nwant %v", actual.IsBrowser, expect.IsBrowser)
 	}
 	if actual.SubProto != expect.SubProto {
